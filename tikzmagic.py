@@ -178,6 +178,9 @@ class TikzMagics(Magics):
         '-S', '--save', action='store',
         help='Save a copy to "filename".'
         )
+    @argument(
+        '-p', '--packages', action='store',
+        help='Packages to load along with Tikz, separated by comma, e.g. -p tkz-berge')
  
     @needs_local_scope
     @argument(
@@ -259,20 +262,26 @@ class TikzMagics(Magics):
             tikz_library = args.library.split(',')
         else:
             tikz_library = None
+
+        tex_packages = ["tikz"]
+        if args.packages is not None:     
+            tex_packages.extend(args.packages.split(','))
  
         add_params = ""
         
         if plot_format == 'png' or plot_format == 'jpg' or plot_format == 'jpeg':
             add_params += "density=300,"
-        
-#\\documentclass[convert={%(add_params)ssize=%(width)sx%(height)s,outext=.%(plot_format)s},border=0pt]{standalone}
-        
+    
         tex = []
         tex.append('''
 \\documentclass[convert={%(add_params)ssize=%(width)sx%(height)s,outext=.png},border=0pt]{standalone}
-\\usepackage{tikz}
         ''' % locals())
         
+        for pkg in tex_packages:
+            tex.append('''
+\\usepackage{%s}
+                ''' % pkg)
+
         if tikz_library is not None:
             for lib in tikz_library:
                 tex.append('''
