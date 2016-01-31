@@ -253,7 +253,7 @@ class TikzMagics(Magics):
         if args.size is not None:
             size = args.size
         else:
-            size = '400,240'
+            size = '1000,500'
  
         width, height = size.split(',')
         
@@ -270,8 +270,10 @@ class TikzMagics(Magics):
         tex_packages = ["tikz", "caption", "float"]
         if args.packages is not None:     
             tex_packages.extend(args.packages.split(','))
-
+        
+        has_caption = False
         if args.caption is not None:
+            has_caption = True
             caption = args.caption.strip("\"")
  
         add_params = ""
@@ -305,11 +307,17 @@ class TikzMagics(Magics):
         tex.append(code)
             
         tex.append('''
-    \\end{tikzpicture}
-    \\caption*{%s}
+    \\end{tikzpicture}''')
+        
+        if has_caption:
+            tex.append('''
+    \\caption*{%s} 
+            ''' % caption)
+            
+        tex.append('''
 \\end{figure}
 \\end{document}
-        ''' % caption)
+        ''')
         
         code = ' '.join(tex)
 
