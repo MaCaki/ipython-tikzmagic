@@ -181,6 +181,10 @@ class TikzMagics(Magics):
     @argument(
         '-p', '--packages', action='store',
         help='Packages to load along with Tikz, separated by comma, e.g. -p tkz-berge')
+
+    @argument(
+        '-c', '--caption', action='store',
+        help='Caption that will be placed below the figure. Place caption in quotes, e.g. -c "a simple reflection" ')
  
     @needs_local_scope
     @argument(
@@ -263,9 +267,12 @@ class TikzMagics(Magics):
         else:
             tikz_library = None
 
-        tex_packages = ["tikz"]
+        tex_packages = ["tikz", "caption", "float"]
         if args.packages is not None:     
             tex_packages.extend(args.packages.split(','))
+
+        if args.caption is not None:
+            caption = args.caption.strip("\"")
  
         add_params = ""
         
@@ -274,9 +281,9 @@ class TikzMagics(Magics):
     
         tex = []
         tex.append('''
-\\documentclass[convert={%(add_params)ssize=%(width)sx%(height)s,outext=.png},border=0pt]{standalone}
+\\documentclass[convert={%(add_params)ssize=%(width)sx%(height)s,outext=.png},border=0pt,float=false,preview=true]{standalone}
         ''' % locals())
-        
+
         for pkg in tex_packages:
             tex.append('''
 \\usepackage{%s}
@@ -290,17 +297,22 @@ class TikzMagics(Magics):
         
         tex.append('''
 \\begin{document}
-\\begin{tikzpicture}[scale=%(scale)s]
+\\begin{figure}
+    \\centering
+    \\begin{tikzpicture}[scale=%(scale)s]
         ''' % locals())
-        
+            
         tex.append(code)
-        
+            
         tex.append('''
-\\end{tikzpicture}
+    \\end{tikzpicture}
+    \\caption*{%s}
+\\end{figure}
 \\end{document}
-        ''')
+        ''' % caption)
         
         code = ' '.join(tex)
+
         latex_log = self._run_latex(code, plot_dir)
         
         key = 'TikZMagic.Tikz'
